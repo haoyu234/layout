@@ -920,6 +920,89 @@ LTEST_DECLARE(anchor_right_margin2)
     LTEST_VEC4EQ(lay_get_rect(ctx, child), 40, 40, 50, 50);
 }
 
+// issue #15
+LTEST_DECLARE(child_expands_container1)
+{
+    lay_id root = lay_item(ctx);
+    lay_set_size_xy(ctx, root, 1, 100);
+
+    lay_id row = lay_item(ctx);
+    lay_set_contain(ctx, row, LAY_ROW);
+    lay_insert(ctx, root, row);
+
+    lay_id child = lay_item(ctx);
+    lay_set_size_xy(ctx, child, 1, 50);
+    lay_set_margins_ltrb(ctx, child, 0, 0, 0, 10);
+    lay_insert(ctx, row, child);
+
+    lay_run_context(ctx);
+    lay_vec4 root_rect = lay_get_rect(ctx, root);
+    lay_vec4 row_rect = lay_get_rect(ctx, row);
+    lay_vec4 child_rect = lay_get_rect(ctx, child);
+
+    LTEST_VEC4EQ(root_rect, 0, 0, 1, 100);
+    LTEST_VEC4EQ(row_rect, 0, 20, 1, 60);
+    LTEST_VEC4EQ(child_rect, 0, 20, 1, 50);
+}
+
+// issue #15
+LTEST_DECLARE(child_expands_container2)
+{
+    lay_id root = lay_item(ctx);
+	lay_set_size_xy(ctx, root, 400, 400);
+	lay_set_margins_ltrb(ctx, root, 50, 50, 50, 50);
+	lay_set_contain(ctx, root, LAY_COLUMN | LAY_WRAP);
+
+	lay_id child1 = lay_item(ctx);
+	lay_set_size_xy(ctx, child1 , 50, 50);
+	lay_set_margins_ltrb(ctx, child1 , 5, 5, 5, 5);
+	lay_insert(ctx, root, child1);
+
+	lay_id child2 = lay_item(ctx);
+	lay_set_size_xy(ctx, child2, 50, 50);
+	lay_set_margins_ltrb(ctx, child2, 5, 5, 5, 5);
+	lay_insert(ctx, root, child2);
+
+	lay_run_context(ctx);
+
+	lay_vec4 root_rect = lay_get_rect(ctx, root);
+	lay_vec4 child1_rect = lay_get_rect(ctx, child1);
+	lay_vec4 child2_rect = lay_get_rect(ctx, child2);
+
+	LTEST_VEC4EQ(root_rect, 50, 50, 60, 400);
+	LTEST_VEC4EQ(child1_rect, 55, 195, 50, 50);
+	LTEST_VEC4EQ(child2_rect, 55, 255, 50, 50);
+}
+
+// issue #20
+LTEST_DECLARE(column_wrap_grandson)
+{
+    lay_id root = lay_item(ctx);
+    lay_set_size_xy(ctx, root, 200, 200);
+    lay_set_margins_ltrb(ctx, root, 50, 50, 50, 50);
+    lay_set_contain(ctx, root, LAY_WRAP | LAY_COLUMN);
+
+    lay_id child1 = lay_item(ctx);
+    lay_set_size_xy(ctx, child1, 50, 50);
+    lay_set_margins_ltrb(ctx, child1, 5, 5, 5, 5);
+    lay_insert(ctx, root, child1);
+
+    lay_id child2 = lay_item(ctx);
+    lay_set_size_xy(ctx, child2, 50, 50);
+    lay_set_margins_ltrb(ctx, child2, 5, 5, 5, 5);
+    lay_insert(ctx, child1, child2);
+
+    lay_run_context(ctx);
+
+	lay_vec4 root_rect = lay_get_rect(ctx, root);
+	lay_vec4 child1_rect = lay_get_rect(ctx, child1);
+	lay_vec4 child2_rect = lay_get_rect(ctx, child2);
+
+	LTEST_VEC4EQ(root_rect, 50, 50, 60, 200);
+	LTEST_VEC4EQ(child1_rect, 55, 125, 50, 50);
+	LTEST_VEC4EQ(child2_rect, 60, 130, 50, 50);
+}
+
 // Call in main to run a test by name
 //
 // Resets string buffer and lay context before running test
@@ -966,6 +1049,9 @@ int main(int argc, char** argv)
     LTEST_RUN(wrap_column_4);
     LTEST_RUN(anchor_right_margin1);
     LTEST_RUN(anchor_right_margin2);
+    LTEST_RUN(child_expands_container1);
+    LTEST_RUN(child_expands_container2);
+    LTEST_RUN(column_wrap_grandson);
 
     printf("Finished tests\n");
 

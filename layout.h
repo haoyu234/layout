@@ -1066,7 +1066,7 @@ void lay_arrange_overlay(lay_context *ctx, lay_id item, int dim)
 
         switch (b_flags & LAY_HFILL) {
         case LAY_HCENTER:
-            child_rect[dim] += (space - child_rect[2 + dim]) / 2 - child_margins[wdim];
+            child_rect[dim] += lay_scalar_max(0, (space - child_rect[2 + dim]) / 2 - child_margins[wdim]);
             break;
         case LAY_RIGHT:
             child_rect[dim] += space - child_rect[2 + dim] - child_margins[dim] - child_margins[wdim];
@@ -1101,7 +1101,7 @@ void lay_arrange_overlay_squeezed_range(
         switch (b_flags & LAY_HFILL) {
             case LAY_HCENTER:
                 rect[2 + dim] = lay_scalar_min(rect[2 + dim], min_size);
-                rect[dim] += (space - rect[2 + dim]) / 2 - margins[wdim];
+                rect[dim] += lay_scalar_max(0, (space - rect[2 + dim]) / 2 - margins[wdim]);
                 break;
             case LAY_RIGHT:
                 rect[2 + dim] = lay_scalar_min(rect[2 + dim], min_size);
@@ -1159,8 +1159,19 @@ static void lay_arrange(lay_context *ctx, lay_id item, int dim)
             lay_arrange_stacked(ctx, item, 1, true);
             lay_scalar offset = lay_arrange_wrapped_overlay_squeezed(ctx, item, 0);
             ctx->rects[item][2 + 0] = offset - ctx->rects[item][0];
+
+            // The X coordinates are calculated above, and all children nodes need to be updated here
+            lay_id child = pitem->first_child;
+            while (child != LAY_INVALID_ID) {
+                lay_arrange(ctx, child, 0);
+                lay_item_t *pchild = lay_get_item(ctx, child);
+                child = pchild->next_sibling;
+            }
+            break;
+        } else {
+            // To prevent repeated calculations, it should be returned directly here
+            return;
         }
-        break;
     case LAY_ROW | LAY_WRAP:
         if (dim == 0)
             lay_arrange_stacked(ctx, item, 0, true);
