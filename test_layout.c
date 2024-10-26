@@ -746,9 +746,7 @@ LTEST_DECLARE(wrap_row_5)
 
     lay_run_context(ctx);
 
-    // TODO note we're adding the -5 here so we ignore the last row, which
-    // seems to be bugged
-    for (int16_t i = 0; i < num_items - 5; ++i) {
+    for (int16_t i = 0; i < num_items; ++i) {
         int16_t x, y;
         x = i % 5;
         y = i / 5;

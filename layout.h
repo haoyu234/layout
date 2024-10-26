@@ -930,7 +930,7 @@ void lay_arrange_stacked(
         uint32_t count = 0; // count of fillers
         uint32_t squeezed_count = 0; // count of squeezable elements
         uint32_t total = 0;
-        bool hardbreak = false;
+        uint32_t before_wrap_count = 0; // count of elements before wrap
         // first pass: count items that need to be expanded,
         // and the space that is used
         lay_id child = start_child;
@@ -951,12 +951,13 @@ void lay_arrange_stacked(
                     ++squeezed_count;
                 extend += child_rect[dim] + child_rect[2 + dim] + child_margins[wdim];
             }
+            ++ before_wrap_count;
             // wrap on end of line or manual flag
             if (wrap && (
                     total && ((extend > space) ||
                     (child_flags & LAY_BREAK)))) {
                 end_child = child;
-                hardbreak = (child_flags & LAY_BREAK) == LAY_BREAK;
+                before_wrap_count = 0;
                 // add marker for subsequent queries
                 pchild->flags = child_flags | LAY_BREAK;
                 break;
@@ -979,9 +980,8 @@ void lay_arrange_stacked(
             else if (total > 0) {
                 switch (item_flags & LAY_JUSTIFY) {
                 case LAY_JUSTIFY:
-                    // justify when not wrapping or not in last line,
-                    // or not manually breaking
-                    if (!wrap || ((end_child != LAY_INVALID_ID) && !hardbreak))
+                    // justify when not wrapping or at least one remaining element
+                    if (!wrap || end_child != LAY_INVALID_ID || before_wrap_count > 0)
                         spacer = (float)extra_space / (float)(total - 1);
                     break;
                 case LAY_START:
